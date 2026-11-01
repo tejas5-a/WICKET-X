@@ -12,6 +12,9 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
     steps:
       - name: Checkout repository
@@ -26,10 +29,38 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Configure Android SDK environment variables
+        run: |
+          set -euo pipefail
+          SDK_DIR="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=${SDK_DIR}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${SDK_DIR}" >> "$GITHUB_ENV"
+          echo "Android SDK Directory: ${SDK_DIR}"
+
       - name: Accept Android SDK licenses
         run: |
           set -euo pipefail
-          yes | sdkmanager --licenses > /dev/null || true
+          echo "Accepting existing Android SDK licenses..."
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Install Android SDK Platform 36 and Build-Tools
+        run: |
+          set -euo pipefail
+          echo "Installing cmdline-tools, platform 36, and build-tools 36.0.0..."
+          sdkmanager --install "cmdline-tools;latest" "platforms;android-36" "build-tools;36.0.0"
+          echo "Re-accepting any newly added licenses..."
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Verify Android SDK installation
+        run: |
+          set -euo pipefail
+          echo "=== Android Environment Diagnostics ==="
+          echo "ANDROID_HOME: ${ANDROID_HOME}"
+          echo "ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}"
+          echo "Installed Platforms:"
+          ls -la "${ANDROID_HOME}/platforms"
+          echo "Installed Build Tools:"
+          ls -la "${ANDROID_HOME}/build-tools"
 
       - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
@@ -74,7 +105,17 @@ jobs:
             exit 1
           fi
 
-      - name: Build Debug APK with Gradle Wrapper
+      - name: Verify Gradle environment (gradlew --version)
+        env:
+          JAVA_TOOL_OPTIONS: "-Djava.awt.headless=true"
+        run: ./gradlew --version
+
+      - name: Verify project configuration (gradlew tasks)
+        env:
+          JAVA_TOOL_OPTIONS: "-Djava.awt.headless=true"
+        run: ./gradlew tasks --no-daemon
+
+      - name: Build Debug APK with Gradle Wrapper (gradlew assembleDebug)
         env:
           JAVA_TOOL_OPTIONS: "-Djava.awt.headless=true"
         run: ./gradlew assembleDebug --stacktrace --no-daemon
@@ -91,10 +132,10 @@ jobs:
           APK_SIZE=$(wc -c < "$EXPECTED_APK")
           echo "Verified debug APK at $EXPECTED_APK (${APK_SIZE} bytes)."
 
-      - name: Upload debug APK artifact
+      - name: Upload Debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
+          name: WicketX-Debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
