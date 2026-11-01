@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -66,6 +71,17 @@ jobs:
         with:
           gradle-version: '9.3.1'
 
+      - name: Validate Gradle Wrapper
+        run: |
+          set -euo pipefail
+          echo "=== Validating Gradle Wrapper ==="
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "::error::gradle/wrapper/gradle-wrapper.jar is missing!"
+            exit 1
+          fi
+          chmod +x ./gradlew
+          ./gradlew --version
+
       - name: Ensure environment configuration files
         run: |
           set -euo pipefail
@@ -104,6 +120,11 @@ jobs:
             exit 1
           fi
           echo "Verified debug keystore at $KEYSTORE_PATH."
+
+      - name: Run unit tests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew testDebugUnitTest --stacktrace
 
       - name: Build Debug APK with Gradle
         run: |
@@ -149,7 +170,7 @@ jobs:
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
+          name: WicketX-Debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
@@ -168,8 +189,14 @@ jobs:
           mkdir -p "$ASSET_DIR"
           ASSET_PATH="${ASSET_DIR}/${ASSET_FILENAME}"
           cp -f "$SOURCE_APK" "$ASSET_PATH"
-          RELEASE_TAG="debug-apk-build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
-          RELEASE_TITLE="Debug APK Build #${GITHUB_RUN_NUMBER}"
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            RELEASE_TAG="${TAG_NAME}"
+            RELEASE_TITLE="WicketX Release ${TAG_NAME}"
+          else
+            RELEASE_TAG="debug-apk-build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+            RELEASE_TITLE="Debug APK Build #${GITHUB_RUN_NUMBER}"
+          fi
           echo "asset_path=${ASSET_PATH}" >> "$GITHUB_OUTPUT"
           echo "asset_name=${ASSET_FILENAME}" >> "$GITHUB_OUTPUT"
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
@@ -246,18 +273,18 @@ jobs:
               echo "- **Release Title:** ${RELEASE_TITLE}"
               echo "- **APK Asset:** \`${ASSET_NAME}\`"
               echo "- **Release Page:** [View Release and Download APK](${RELEASE_URL})"
-              echo "- **Workflow Artifact:** Also available under Actions artifacts as \`app-debug-apk\`."
+              echo "- **Workflow Artifact:** Also available under Actions artifacts as \`WicketX-Debug-APK\`."
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::warning::GitHub Release publishing encountered an error or was skipped."
-            echo "The debug APK artifact 'app-debug-apk' was successfully built and uploaded."
-            echo "You can download 'app-debug-apk' directly from the GitHub Actions run Summary page."
+            echo "The debug APK artifact 'WicketX-Debug-APK' was successfully built and uploaded."
+            echo "You can download 'WicketX-Debug-APK' directly from the GitHub Actions run Summary page."
             {
               echo "## ⚠️ WicketX Debug APK Build Completed (Release Note)"
               echo ""
               echo "The Android debug APK was **built successfully**."
               echo ""
-              echo "- **Artifact Name:** \`app-debug-apk\`"
+              echo "- **Artifact Name:** \`WicketX-Debug-APK\`"
               echo "- **Location:** Check the **Artifacts** section at the bottom of this GitHub Actions run."
               echo "- **Release Status:** Automatic GitHub Release publishing could not be completed. You can download the APK from the Actions artifacts above."
             } >> "$GITHUB_STEP_SUMMARY"
