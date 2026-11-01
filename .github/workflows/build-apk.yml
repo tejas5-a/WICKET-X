@@ -19,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Temurin JDK 17
+      - name: Set up Temurin Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -106,16 +106,7 @@ jobs:
           echo "Verified debug keystore at $KEYSTORE_PATH."
 
       - name: Build Debug APK with Gradle
-        run: |
-          if [ -f "./gradlew" ] && [ -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleDebug --stacktrace --no-daemon
-          else
-            echo "Ensuring Gradle wrapper assets..."
-            gradle wrapper --gradle-version 9.3.1
-            chmod +x ./gradlew
-            ./gradlew assembleDebug --stacktrace --no-daemon
-          fi
+        run: gradle :app:assembleDebug --stacktrace --no-daemon
 
       - name: Verify generated Debug APK
         run: |
@@ -125,7 +116,9 @@ jobs:
             echo "::warning::Expected APK not found at $EXPECTED_APK. Searching in app/build/outputs/apk..."
             FOUND_APK=$(find app/build/outputs/apk -name "*.apk" -type f | head -n 1 || true)
             if [ -n "$FOUND_APK" ] && [ -s "$FOUND_APK" ]; then
-              echo "Found APK at: $FOUND_APK. Relocating to $EXPECTED_APK..."
+              echo "Found APK paths in app/build/outputs/apk:"
+              find app/build/outputs/apk -name "*.apk" -type f
+              echo "Relocating discovered debug APK $FOUND_APK to $EXPECTED_APK..."
               mkdir -p "$(dirname "$EXPECTED_APK")"
               cp "$FOUND_APK" "$EXPECTED_APK"
             else
@@ -144,6 +137,10 @@ jobs:
               exit 1
               ;;
           esac
+          if [ "$EXPECTED_APK" != "app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "::error::Selected APK is not exactly app/build/outputs/apk/debug/app-debug.apk"
+            exit 1
+          fi
           APK_SIZE=$(wc -c < "$EXPECTED_APK")
           echo "Successfully verified debug APK at $EXPECTED_APK (${APK_SIZE} bytes)."
 
@@ -201,16 +198,17 @@ jobs:
               ;;
           esac
           NOTES_FILE="${RUNNER_TEMP}/release-notes.md"
-          cat << 'EOF' > "$NOTES_FILE"
+          cat << EOF > "$NOTES_FILE"
           ### WicketX Automated Debug APK Build
 
-          > **Notice:** This is an automated pre-release debug build intended for mobile installation and testing.
-
-          - **Build Run:** #${{ github.run_number }} (Attempt #${{ github.run_attempt }})
-          - **Commit SHA:** `${{ github.sha }}`
-          - **Branch:** `${{ github.ref_name }}`
-          - **Keystore:** Signed with Android debug keystore for development and testing
-          - **Direct Mobile Install:** Download the `.apk` asset attached below directly to your Android device to install.
+          - **Build System:** Built automatically by GitHub Actions
+          - **Run Number:** #${GITHUB_RUN_NUMBER}
+          - **Run Attempt:** #${GITHUB_RUN_ATTEMPT}
+          - **Source Commit:** \`${GITHUB_SHA}\`
+          - **Testing Notice:** This is an automatically generated debug APK intended for testing purposes only.
+          - **Production Notice:** This APK is not a Google Play Store production release.
+          - **Keystore Notice:** Signed only with a temporary debug keystore.
+          - **Direct Mobile Install:** Download the attached \`.apk\` file directly to your Android device for installation.
           EOF
           echo "Publishing GitHub Release ${RELEASE_TAG}..."
           gh release create "$RELEASE_TAG" "$ASSET_PATH" \
@@ -240,7 +238,7 @@ jobs:
             {
               echo "## 🚀 WicketX Debug APK Build Succeeded"
               echo ""
-              echo "Your debug APK is built and ready for mobile download!"
+              echo "Your debug APK is built and ready for direct mobile download!"
               echo ""
               echo "- **Release Tag:** \`${RELEASE_TAG}\`"
               echo "- **Release Title:** ${RELEASE_TITLE}"
@@ -249,16 +247,16 @@ jobs:
               echo "- **Workflow Artifact:** Also available under Actions artifacts as \`app-debug-apk\`."
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::warning::GitHub Release publishing was skipped or encountered an error."
+            echo "::warning::GitHub Release publishing encountered an error or was skipped."
             echo "The debug APK artifact 'app-debug-apk' was successfully built and uploaded."
             echo "You can download 'app-debug-apk' directly from the GitHub Actions run Summary page."
             {
               echo "## ⚠️ WicketX Debug APK Build Completed (Release Note)"
               echo ""
-              echo "The Android debug APK was **built successfully** by Gradle."
+              echo "The Android debug APK was **built successfully**."
               echo ""
               echo "- **Artifact Name:** \`app-debug-apk\`"
               echo "- **Location:** Check the **Artifacts** section at the bottom of this GitHub Actions run."
-              echo "- **Release Status:** Automatic GitHub Release publishing could not be completed (e.g., repository permissions or tag collision). You can download the APK from the Actions artifacts above."
+              echo "- **Release Status:** Automatic GitHub Release publishing could not be completed. You can download the APK from the Actions artifacts above."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
