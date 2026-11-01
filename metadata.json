@@ -1,0 +1,6 @@
+{
+  "name": "WicketX",
+  "description": "Grassroots cricket scoring, live matches, real player stats, tournaments, and community.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

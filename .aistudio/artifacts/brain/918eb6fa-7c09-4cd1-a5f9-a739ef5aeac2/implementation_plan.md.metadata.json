@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan to fix WicketX live scoring visibility, separate Scorer and Viewer roles, implement PIN-based scoring authorization, and enable real-time score synchronization with Supabase and Room offline caching.",
+  "updatedAt":  "2026-11-01T08:15:48.313728305Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

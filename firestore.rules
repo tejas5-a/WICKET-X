@@ -1,0 +1,209 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny Catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.username is string && data.username.size() >= 2 && data.username.size() <= 40 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 100)) &&
+             (!('playingRole' in data) || (data.playingRole is string && data.playingRole.size() <= 40)) &&
+             (!('battingStyle' in data) || (data.battingStyle is string && data.battingStyle.size() <= 40)) &&
+             (!('bowlingStyle' in data) || (data.bowlingStyle is string && data.bowlingStyle.size() <= 40)) &&
+             (!('matchesPlayed' in data) || data.matchesPlayed is int) &&
+             (!('totalRuns' in data) || data.totalRuns is int) &&
+             (!('totalWickets' in data) || data.totalWickets is int);
+    }
+
+    function isValidTeam(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.name is string && data.name.size() >= 2 && data.name.size() <= 80 &&
+             data.shortName is string && data.shortName.size() >= 1 && data.shortName.size() <= 10 &&
+             data.createdBy is string && data.createdBy.size() > 0 && data.createdBy.size() <= 128 &&
+             (!('city' in data) || (data.city is string && data.city.size() <= 60)) &&
+             (!('captainName' in data) || (data.captainName is string && data.captainName.size() <= 60)) &&
+             (!('playerCount' in data) || data.playerCount is int);
+    }
+
+    function isValidMatch(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.creatorId is string && data.creatorId.size() > 0 && data.creatorId.size() <= 128 &&
+             data.teamAName is string && data.teamAName.size() >= 1 && data.teamAName.size() <= 80 &&
+             data.teamBName is string && data.teamBName.size() >= 1 && data.teamBName.size() <= 80 &&
+             data.matchFormat is string && data.matchFormat.size() >= 1 && data.matchFormat.size() <= 20 &&
+             data.totalOvers is int && data.totalOvers >= 1 && data.totalOvers <= 100 &&
+             data.status is string && data.status in ['scheduled', 'live', 'completed', 'abandoned'] &&
+             (!('venue' in data) || (data.venue is string && data.venue.size() <= 100)) &&
+             (!('matchDate' in data) || (data.matchDate is string && data.matchDate.size() <= 50)) &&
+             (!('tossWinner' in data) || (data.tossWinner is string && data.tossWinner.size() <= 80)) &&
+             (!('tossDecision' in data) || (data.tossDecision is string && data.tossDecision in ['bat', 'bowl'])) &&
+             (!('currentInnings' in data) || data.currentInnings is int) &&
+             (!('teamAScore' in data) || data.teamAScore is int) &&
+             (!('teamAWickets' in data) || data.teamAWickets is int) &&
+             (!('teamABalls' in data) || data.teamABalls is int) &&
+             (!('teamBScore' in data) || data.teamBScore is int) &&
+             (!('teamBWickets' in data) || data.teamBWickets is int) &&
+             (!('teamBBalls' in data) || data.teamBBalls is int) &&
+             (!('targetRuns' in data) || data.targetRuns is int) &&
+             (!('resultSummary' in data) || (data.resultSummary is string && data.resultSummary.size() <= 200));
+    }
+
+    function isValidDelivery(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.matchId is string && data.matchId.size() > 0 && data.matchId.size() <= 128 &&
+             data.creatorId is string && data.creatorId.size() > 0 && data.creatorId.size() <= 128 &&
+             data.innings is int && data.innings >= 1 && data.innings <= 2 &&
+             data.runsBat is int && data.runsBat >= 0 && data.runsBat <= 10 &&
+             (!('overNumber' in data) || data.overNumber is int) &&
+             (!('ballInOver' in data) || data.ballInOver is int) &&
+             (!('strikerName' in data) || (data.strikerName is string && data.strikerName.size() <= 60)) &&
+             (!('nonStrikerName' in data) || (data.nonStrikerName is string && data.nonStrikerName.size() <= 60)) &&
+             (!('bowlerName' in data) || (data.bowlerName is string && data.bowlerName.size() <= 60)) &&
+             (!('extrasType' in data) || (data.extrasType is string && data.extrasType in ['none', 'wide', 'no_ball', 'bye', 'leg_bye', 'penalty'])) &&
+             (!('extrasRuns' in data) || data.extrasRuns is int) &&
+             (!('isWicket' in data) || data.isWicket is bool) &&
+             (!('dismissalType' in data) || (data.dismissalType is string && data.dismissalType.size() <= 40)) &&
+             (!('dismissedPlayer' in data) || (data.dismissedPlayer is string && data.dismissedPlayer.size() <= 60)) &&
+             (!('isLegal' in data) || data.isLegal is bool) &&
+             (!('commentary' in data) || (data.commentary is string && data.commentary.size() <= 200));
+    }
+
+    function isValidTournament(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.organizerId is string && data.organizerId.size() > 0 && data.organizerId.size() <= 128 &&
+             data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+             data.format is string && data.format.size() >= 1 && data.format.size() <= 30 &&
+             data.status is string && data.status in ['upcoming', 'active', 'completed'] &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 100)) &&
+             (!('teamCount' in data) || data.teamCount is int);
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'username', 'displayName', 'createdAt']) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidUserProfile(incoming());
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'username', 'displayName', 'email', 'playingRole',
+                         'battingStyle', 'bowlingStyle', 'matchesPlayed',
+                         'totalRuns', 'totalWickets', 'updatedAt'
+                       ]);
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- Teams Collection ---
+    match /teams/{teamId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       isValidId(teamId) &&
+                       incoming().id == teamId &&
+                       incoming().createdBy == request.auth.uid &&
+                       incoming().keys().hasAll(['id', 'name', 'shortName', 'createdBy', 'createdAt']) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidTeam(incoming());
+      allow update: if isSignedIn() &&
+                       existing().createdBy == request.auth.uid &&
+                       incoming().createdBy == existing().createdBy &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTeam(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'shortName', 'city', 'captainName', 'playerCount', 'updatedAt'
+                       ]);
+      allow delete: if isSignedIn() && existing().createdBy == request.auth.uid;
+    }
+
+    // --- Matches Collection ---
+    match /matches/{matchId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       isValidId(matchId) &&
+                       incoming().id == matchId &&
+                       incoming().creatorId == request.auth.uid &&
+                       incoming().keys().hasAll(['id', 'creatorId', 'teamAName', 'teamBName', 'matchFormat', 'totalOvers', 'status', 'createdAt']) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidMatch(incoming());
+      allow update: if isSignedIn() &&
+                       existing().creatorId == request.auth.uid &&
+                       incoming().creatorId == existing().creatorId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidMatch(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'teamAName', 'teamBName', 'matchFormat', 'totalOvers', 'venue',
+                         'matchDate', 'status', 'tossWinner', 'tossDecision', 'currentInnings',
+                         'teamAScore', 'teamAWickets', 'teamABalls',
+                         'teamBScore', 'teamBWickets', 'teamBBalls',
+                         'targetRuns', 'resultSummary', 'updatedAt'
+                       ]);
+      allow delete: if isSignedIn() && existing().creatorId == request.auth.uid;
+
+      // Deliveries subcollection for ball-by-ball events
+      match /deliveries/{deliveryId} {
+        allow get, list: if isSignedIn();
+        allow create: if isSignedIn() &&
+                         isValidId(deliveryId) &&
+                         incoming().id == deliveryId &&
+                         incoming().matchId == matchId &&
+                         incoming().creatorId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidDelivery(incoming());
+        allow update, delete: if isSignedIn() && existing().creatorId == request.auth.uid;
+      }
+    }
+
+    // --- Tournaments Collection ---
+    match /tournaments/{tournamentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       isValidId(tournamentId) &&
+                       incoming().id == tournamentId &&
+                       incoming().organizerId == request.auth.uid &&
+                       incoming().keys().hasAll(['id', 'organizerId', 'name', 'format', 'status', 'createdAt']) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidTournament(incoming());
+      allow update: if isSignedIn() &&
+                       existing().organizerId == request.auth.uid &&
+                       incoming().organizerId == existing().organizerId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTournament(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'format', 'location', 'status', 'teamCount', 'updatedAt'
+                       ]);
+      allow delete: if isSignedIn() && existing().organizerId == request.auth.uid;
+    }
+  }
+}

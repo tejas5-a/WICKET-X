@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with cricket career details and stats",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "username": { "type": "string", "description": "Unique username" },
+        "displayName": { "type": "string", "description": "Player display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "playingRole": { "type": "string", "description": "Batsman, Bowler, All-Rounder, Wicketkeeper" },
+        "battingStyle": { "type": "string", "description": "Right-hand bat, Left-hand bat" },
+        "bowlingStyle": { "type": "string", "description": "Right-arm medium, Left-arm orthodox, etc." },
+        "matchesPlayed": { "type": "integer", "description": "Total matches played" },
+        "totalRuns": { "type": "integer", "description": "Total career runs" },
+        "totalWickets": { "type": "integer", "description": "Total career wickets" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp via serverTimestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp via serverTimestamp" }
+      },
+      "required": ["userId", "username", "displayName", "createdAt"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Grassroots cricket team",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique team ID" },
+        "name": { "type": "string", "description": "Full team name" },
+        "shortName": { "type": "string", "description": "3-4 letter acronym" },
+        "city": { "type": "string", "description": "Home ground or city" },
+        "createdBy": { "type": "string", "description": "User ID of team creator" },
+        "captainName": { "type": "string", "description": "Team captain name" },
+        "playerCount": { "type": "integer", "description": "Number of squad players" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["id", "name", "shortName", "createdBy", "createdAt"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Cricket match details and live score state",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique match ID" },
+        "creatorId": { "type": "string", "description": "User ID of scorer/organizer" },
+        "teamAName": { "type": "string", "description": "First team name" },
+        "teamBName": { "type": "string", "description": "Second team name" },
+        "matchFormat": { "type": "string", "description": "T10, T20, T30, T50, Custom" },
+        "totalOvers": { "type": "integer", "description": "Maximum overs per innings" },
+        "venue": { "type": "string", "description": "Match ground or venue" },
+        "matchDate": { "type": "string", "description": "Scheduled date" },
+        "status": { "type": "string", "description": "scheduled, live, completed, abandoned" },
+        "tossWinner": { "type": "string", "description": "Team winning the toss" },
+        "tossDecision": { "type": "string", "description": "bat or bowl" },
+        "currentInnings": { "type": "integer", "description": "1 or 2" },
+        "teamAScore": { "type": "integer", "description": "Team A total runs" },
+        "teamAWickets": { "type": "integer", "description": "Team A total wickets" },
+        "teamABalls": { "type": "integer", "description": "Team A legal balls bowled" },
+        "teamBScore": { "type": "integer", "description": "Team B total runs" },
+        "teamBWickets": { "type": "integer", "description": "Team B total wickets" },
+        "teamBBalls": { "type": "integer", "description": "Team B legal balls bowled" },
+        "targetRuns": { "type": "integer", "description": "Target runs for 2nd innings" },
+        "resultSummary": { "type": "string", "description": "Match result summary text" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["id", "creatorId", "teamAName", "teamBName", "matchFormat", "totalOvers", "status", "createdAt"]
+    },
+    "Delivery": {
+      "title": "Delivery",
+      "description": "Ball-by-ball delivery event in a match innings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique delivery event ID" },
+        "matchId": { "type": "string", "description": "Parent match ID" },
+        "creatorId": { "type": "string", "description": "Scorer user ID" },
+        "innings": { "type": "integer", "description": "Innings number 1 or 2" },
+        "overNumber": { "type": "integer", "description": "Zero-indexed over count" },
+        "ballInOver": { "type": "integer", "description": "Ball number in current over" },
+        "strikerName": { "type": "string", "description": "Current striker batter name" },
+        "nonStrikerName": { "type": "string", "description": "Current non-striker name" },
+        "bowlerName": { "type": "string", "description": "Current bowler name" },
+        "runsBat": { "type": "integer", "description": "Runs scored off the bat" },
+        "extrasType": { "type": "string", "description": "none, wide, no_ball, bye, leg_bye, penalty" },
+        "extrasRuns": { "type": "integer", "description": "Runs from extras" },
+        "isWicket": { "type": "boolean", "description": "Whether wicket fell" },
+        "dismissalType": { "type": "string", "description": "bowled, caught, run_out, lbw, stumped, etc." },
+        "dismissedPlayer": { "type": "string", "description": "Name of dismissed player if wicket" },
+        "isLegal": { "type": "boolean", "description": "Whether ball counts towards over" },
+        "commentary": { "type": "string", "description": "Short commentary snippet" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Delivery timestamp" }
+      },
+      "required": ["id", "matchId", "creatorId", "innings", "runsBat", "createdAt"]
+    },
+    "Tournament": {
+      "title": "Tournament",
+      "description": "Grassroots cricket tournament or league",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique tournament ID" },
+        "organizerId": { "type": "string", "description": "User ID of organizer" },
+        "name": { "type": "string", "description": "Tournament name" },
+        "format": { "type": "string", "description": "T20, T10, 50-Over, etc." },
+        "location": { "type": "string", "description": "City or venue" },
+        "status": { "type": "string", "description": "upcoming, active, completed" },
+        "teamCount": { "type": "integer", "description": "Number of participating teams" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["id", "organizerId", "name", "format", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/UserProfile",
+      "description": "User profile with career stats"
+    },
+    "/teams/{teamId}": {
+      "schema": "#/entities/Team",
+      "description": "Cricket teams"
+    },
+    "/matches/{matchId}": {
+      "schema": "#/entities/Match",
+      "description": "Matches and live scores"
+    },
+    "/matches/{matchId}/deliveries/{deliveryId}": {
+      "schema": "#/entities/Delivery",
+      "description": "Ball-by-ball delivery event subcollection"
+    },
+    "/tournaments/{tournamentId}": {
+      "schema": "#/entities/Tournament",
+      "description": "Cricket tournaments and leagues"
+    }
+  }
+}
