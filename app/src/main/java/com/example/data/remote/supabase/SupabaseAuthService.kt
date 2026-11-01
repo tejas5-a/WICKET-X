@@ -186,7 +186,7 @@ class SupabaseAuthService(
                     val json = JSONObject(responseBody)
                     val userObj = json.optJSONObject("user")
                     val userId = userObj?.optString("id") ?: ("user_" + cleanPhone.filter { it.isDigit() })
-                    val accessToken = json.optString("access_token", null)
+                    val accessToken = json.optString("access_token", "").ifBlank { null }
                     return@withContext VerifyResult.Success(
                         userId = userId,
                         phoneNumber = cleanPhone,

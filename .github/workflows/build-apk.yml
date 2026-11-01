@@ -183,18 +183,18 @@ jobs:
           esac
 
           NOTES_FILE="${RUNNER_TEMP}/release-notes.md"
-          cat <<EOF > "$NOTES_FILE"
-          ### Automated Debug APK Build
-
-          - **Notice:** This is an automatically generated debug APK.
-          - **Built by:** GitHub Actions
-          - **Run Number:** ${GITHUB_RUN_NUMBER}
-          - **Run Attempt:** ${GITHUB_RUN_ATTEMPT}
-          - **Source Commit SHA:** ${GITHUB_SHA}
-          - **Intended Use:** This APK is intended for testing only.
-          - **Distribution Status:** This APK is not a Play Store production release.
-          - **Signing Info:** This APK is signed only with a temporary debug keystore.
-          EOF
+          {
+            echo "### Automated Debug APK Build"
+            echo ""
+            echo "- **Notice:** This is an automatically generated debug APK."
+            echo "- **Built by:** GitHub Actions"
+            echo "- **Run Number:** ${GITHUB_RUN_NUMBER}"
+            echo "- **Run Attempt:** ${GITHUB_RUN_ATTEMPT}"
+            echo "- **Source Commit SHA:** ${GITHUB_SHA}"
+            echo "- **Intended Use:** This APK is intended for testing only."
+            echo "- **Distribution Status:** This APK is not a Play Store production release."
+            echo "- **Signing Info:** This APK is signed only with a temporary debug keystore."
+          } > "$NOTES_FILE"
 
           if ! gh release create "$RELEASE_TAG" "$ASSET_PATH" \
             --repo "$GITHUB_REPOSITORY" \
