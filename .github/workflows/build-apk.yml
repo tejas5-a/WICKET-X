@@ -106,7 +106,9 @@ jobs:
           echo "Verified debug keystore at $KEYSTORE_PATH."
 
       - name: Build Debug APK with Gradle
-        run: gradle :app:assembleDebug --stacktrace --no-daemon
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
 
       - name: Verify generated Debug APK
         run: |
