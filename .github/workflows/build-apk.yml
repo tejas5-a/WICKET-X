@@ -107,11 +107,14 @@ jobs:
 
       - name: Build Debug APK with Gradle
         run: |
-          if [ -f "./gradlew" ]; then
+          if [ -f "./gradlew" ] && [ -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
             chmod +x ./gradlew
             ./gradlew assembleDebug --stacktrace --no-daemon
           else
-            gradle :app:assembleDebug --stacktrace --no-daemon
+            echo "Ensuring Gradle wrapper assets..."
+            gradle wrapper --gradle-version 9.3.1
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --stacktrace --no-daemon
           fi
 
       - name: Verify generated Debug APK
